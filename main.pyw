@@ -5,9 +5,18 @@ from tkinter import filedialog
 from tkinter import scrolledtext 
 from tkinter.ttk import *
 import os
+import json
 import fortune
 
-# conf = open('conf.cfg', 'r', encoding="utf-8")
+default_conf = {
+    'cookie_path' : './cookies/default_cookies.txt',
+    'bg' : './backgrounds/neon.jpg'
+    }
+
+if os.path.exists('config.json') == False:
+    open('config.json', 'w', encoding = "utf-8")
+    with open('config.json', 'w') as conf:
+        json.dump(default_conf, conf, indent = 4, sort_keys = True)
 
 fortune_window = Tk()
 fortune_window.withdraw()
@@ -28,13 +37,32 @@ def load_opt():
         current_folder = os.path.dirname(os.path.abspath(__file__))
         current_folder = current_folder.replace('\\', '/', -1)
         cookie_path = cookie_path.replace(current_folder, '.', 1)
-        with open('conf.cfg', 'w', encoding = "utf-8") as conf:
-            conf.write(cookie_path)
-        with open('conf.cfg', 'r', encoding = "utf-8") as conf:
-            entry.delete(0, 'end')
-            entry.insert(0, conf.read())
 
-        
+        with open('config.json', 'r', encoding = "utf-8") as conf:
+            data = json.load(conf)
+            data['cookie_path'] = cookie_path
+            entry_cookie_path.delete(0, 'end')
+            entry_cookie_path.insert(0, cookie_path)
+            with open('config.json', 'w+', encoding = "utf-8") as conf:
+                json.dump(data, conf, indent = 4, sort_keys = True)
+
+    def select_bg():
+        bg_path =  filedialog.askopenfilename(title = "Select your background image:",
+                                                 filetypes = [("PNG", "*.png"),
+                                                              ("JPG", "*.jpg"),
+                                                              ("GIF", "*.gif"),
+                                                              ("All Files", "*.*")])
+        current_folder = os.path.dirname(os.path.abspath(__file__))
+        current_folder = current_folder.replace('\\', '/', -1)
+        bg_path = bg_path.replace(current_folder, '.', 1)
+        with open('config.json', 'r', encoding = "utf-8") as conf:
+            data = json.load(conf)
+            data['bg'] = bg_path
+            entry_bg_path.delete(0, 'end')
+            entry_bg_path.insert(0, bg_path)
+            with open('config.json', 'w+', encoding = "utf-8") as conf:
+                json.dump(data, conf, indent = 4, sort_keys = True)
+
         '''
         try:
             conf = open('conf.cfg', 'w')
@@ -45,8 +73,9 @@ def load_opt():
         '''
     
     def add_cookie2file(text):
-        with open('conf.cfg', 'r', encoding = "utf-8") as conf:
-            cookie_path = conf.read()
+        with open('config.json', 'r', encoding = "utf-8") as conf:
+            data = json.load(conf)
+            cookie_path = data['cookie_path']
         with open(cookie_path, 'a', encoding = "utf-8") as cookie:
             cookie.write('%\n')
             cookie.write(text)
@@ -54,8 +83,9 @@ def load_opt():
 
 
     def import_from_file():
-        with open('conf.cfg', 'r', encoding = "utf-8") as conf:
-            cookie_path = conf.read()
+        with open('config.json', 'r', encoding = "utf-8") as conf:
+            data = json.load(conf)
+            cookie_path = data['cookie_path']
             
         path = filedialog.askopenfilename(title = "Select file to import:",
                                           filetypes = [("Text", "*.txt"),
@@ -84,13 +114,15 @@ def load_opt():
     options_tabs.pack(padx = 10, pady = 5, fill = BOTH, expand = True)
 
     ############################- General -#############################
-    label_cookie_path = Label(frame_gen, text = 'Set cookie path')
+    label_cookie_path = Label(frame_gen, text = 'Set cookie path:')
     label_cookie_path.place(x = 10, y = 10)
     
-    entry = Entry(frame_gen, width = 40)
-    entry.place(x = 10, y = 30)
-    with open('conf.cfg', 'r', encoding = "utf-8") as conf:
-        entry.insert(0, conf.read())
+    entry_cookie_path = Entry(frame_gen, width = 40)
+    entry_cookie_path.place(x = 10, y = 30)
+    with open('config.json', 'r', encoding = "utf-8") as conf:
+        data = json.load(conf)
+        cookie_path = data['cookie_path']
+        entry_cookie_path.insert(0, cookie_path)
     
     browse_file = Button(frame_gen, text = '...', command = select_cookie)
     browse_file.place(x = 260, y = 28)
@@ -124,6 +156,25 @@ def load_opt():
                               command = import_from_file)
     import_from_file.place(x = 110, y = 250)
     
+    ###################################- Appearance -##############################################
+    label_bg = Label(frame_appear, text = 'Set Background Image:')
+    label_bg.place(x = 10, y = 10)
+
+    rst_bg = Button(frame_appear, image = rst_ico, compound = LEFT)
+    rst_bg.place(x = 10, y = 28)
+    rst_bg.config(width = 1)
+
+    entry_bg_path = Entry(frame_appear, width = 36)
+    entry_bg_path.place(x = 35, y = 30)
+
+    with open('config.json', 'r', encoding = "utf-8") as conf:
+        data = json.load(conf)
+        bg_path = data['bg']
+        entry_bg_path.insert(0, bg_path)
+
+    browse_bg = Button(frame_appear, text = '...', command = select_bg)
+    browse_bg.place(x = 260, y = 28)
+    browse_bg.config(width = 3)
     ###################################- About -###################################################
     label_icon = Label(frame_about, image = icon)
     label_icon.place(x = 10, y = 0)
@@ -144,20 +195,24 @@ def load_opt():
 def goto_options():
     load_opt()
     
-with open('conf.cfg', 'r', encoding = "utf-8") as conf:
-    cookie_path = conf.read()
-    
+with open('config.json', 'r', encoding = "utf-8") as conf:
+    data = json.load(conf)
+    cookie_path = data['cookie_path']
+
 cookie = fortune.get_random_fortune(cookie_path)
 
 
 Label(fortune_window,
-      width = 30,
+      #width = 40,
       text = cookie,
-      font = ('', 15)).pack(side = LEFT, pady = 10)
+      wraplength = 480,
+      justify = 'left',
+      font = ('', 15)).pack(side = LEFT, padx = 10, pady = 10),
 
 # load icons
 setting_ico = PhotoImage(file = r'res/setting-icon.png').subsample(20, 20)
 exit_ico = PhotoImage(file = r"res/exit-icon.png").subsample(20, 20)
+rst_ico = PhotoImage(file = r'res/rst-icon.png').subsample(35, 35)
 
 Button(fortune_window,
        text = 'Options',
