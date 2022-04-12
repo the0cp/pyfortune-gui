@@ -10,7 +10,8 @@ import fortune
 
 default_conf = {
     'cookie_path' : './cookies/default_cookies.txt',
-    'bg' : './backgrounds/neon.jpg'
+    'bg' : './backgrounds/neon.jpg',
+    'enable_bg' : 0
     }
 
 if os.path.exists('config.json') == False:
@@ -97,6 +98,16 @@ def load_opt():
             cookie.write('%\n')
             cookie.write(cookies)
 
+    def reset_bg():
+        entry_bg_path.delete(0, 'end')
+        entry_bg_path.insert(0, './backgrounds/neon.jpg')
+
+        with open('config.json', 'r', encoding = "utf-8") as conf:
+            data = json.load(conf)
+            data['bg'] = './backgrounds/neon.jpg'
+            with open('config.json', 'w+', encoding = "utf-8") as conf:
+                json.dump(data, conf, indent = 4, sort_keys = True)
+
     ############################- Load option window -###################################
     options_window.attributes('-topmost', True)
     options_window.geometry('320x320')
@@ -160,12 +171,12 @@ def load_opt():
     label_bg = Label(frame_appear, text = 'Set Background Image:')
     label_bg.place(x = 10, y = 10)
 
-    rst_bg = Button(frame_appear, image = rst_ico, compound = LEFT)
-    rst_bg.place(x = 10, y = 28)
-    rst_bg.config(width = 1)
+    rst_bg = Button(frame_appear, image = rst_ico, compound = LEFT, command = reset_bg)
+    rst_bg.place(x = 235, y = 28)
+    rst_bg.config(width = 0.5)
 
     entry_bg_path = Entry(frame_appear, width = 36)
-    entry_bg_path.place(x = 35, y = 30)
+    entry_bg_path.place(x = 10, y = 30)
 
     with open('config.json', 'r', encoding = "utf-8") as conf:
         data = json.load(conf)
@@ -173,7 +184,7 @@ def load_opt():
         entry_bg_path.insert(0, bg_path)
 
     browse_bg = Button(frame_appear, text = '...', command = select_bg)
-    browse_bg.place(x = 260, y = 28)
+    browse_bg.place(x = 265, y = 28)
     browse_bg.config(width = 3)
     ###################################- About -###################################################
     label_icon = Label(frame_about, image = icon)
@@ -181,11 +192,11 @@ def load_opt():
     label_name = Label(frame_about, text = 'pyFortune-GUI', font = ('', 20))
     label_name.place(x = 80, y = 10)
     label_author = Label(frame_about,
-                         text = """Author: T.C(邓安邦)
+                         text = """Author: Theodore Cooper
                                 \nWebsite: https://theodorecooper.github.io/
                                 \nGithub: @theodorecooper
                                 \nEmail: ccooperr2005@gmail.com
-                                \nBased on python3.9.6 Windows 10(x64,21H1) & tkinter
+                                \nBased on python 3.9.6, Windows 10(x64,21H1) & tkinter
                                 """)
     label_author.place(x = 10, y = 70)
     ######################################################################################
