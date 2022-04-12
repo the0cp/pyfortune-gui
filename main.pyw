@@ -4,14 +4,16 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import scrolledtext 
 from tkinter.ttk import *
+from PIL import Image, ImageTk
 import os
 import json
 import fortune
 
 default_conf = {
     'cookie_path' : './cookies/default_cookies.txt',
-    'bg' : './backgrounds/neon.jpg',
-    'enable_bg' : 0
+    'bg' : './backgrounds/neon.png',
+    'enable_bg' : 0,
+    'alpha' : 100
     }
 
 if os.path.exists('config.json') == False:
@@ -50,9 +52,7 @@ def load_opt():
     def select_bg():
         bg_path =  filedialog.askopenfilename(title = "Select your background image:",
                                                  filetypes = [("PNG", "*.png"),
-                                                              ("JPG", "*.jpg"),
-                                                              ("GIF", "*.gif"),
-                                                              ("All Files", "*.*")])
+                                                              ("GIF", "*.gif")])
         current_folder = os.path.dirname(os.path.abspath(__file__))
         current_folder = current_folder.replace('\\', '/', -1)
         bg_path = bg_path.replace(current_folder, '.', 1)
@@ -100,11 +100,11 @@ def load_opt():
 
     def reset_bg():
         entry_bg_path.delete(0, 'end')
-        entry_bg_path.insert(0, './backgrounds/neon.jpg')
+        entry_bg_path.insert(0, './backgrounds/neon.png')
 
         with open('config.json', 'r', encoding = "utf-8") as conf:
             data = json.load(conf)
-            data['bg'] = './backgrounds/neon.jpg'
+            data['bg'] = './backgrounds/neon.png'
             with open('config.json', 'w+', encoding = "utf-8") as conf:
                 json.dump(data, conf, indent = 4, sort_keys = True)
 
@@ -182,10 +182,23 @@ def load_opt():
         data = json.load(conf)
         bg_path = data['bg']
         entry_bg_path.insert(0, bg_path)
+        if_enable_bg = data['enable_bg']
 
     browse_bg = Button(frame_appear, text = '...', command = select_bg)
     browse_bg.place(x = 265, y = 28)
     browse_bg.config(width = 3)
+
+    #CheckVar = IntVar()
+    enable_bg_check = Checkbutton(frame_appear, 
+                                  text = 'Enable Background Image', 
+                                  variable = 0,
+                                  onvalue = 1, 
+                                  offvalue = 0, 
+                                  width = 20
+                                  )
+    enable_bg_check.place(x = 10, y = 58)
+    if if_enable_bg == 1:
+        enable_bg_check.config(variable = 1)
     ###################################- About -###################################################
     label_icon = Label(frame_about, image = icon)
     label_icon.place(x = 10, y = 0)
@@ -209,16 +222,40 @@ def goto_options():
 with open('config.json', 'r', encoding = "utf-8") as conf:
     data = json.load(conf)
     cookie_path = data['cookie_path']
+    if_enable_bg = data['enable_bg']
+    bg_path = data['bg']
+    alpha = data['alpha']
 
 cookie = fortune.get_random_fortune(cookie_path)
 
+if if_enable_bg == 1:
+    bg_ico = Image.open('backgrounds/neon.jpg')
+    bg_ico = bg_ico.convert('RGBA')
+    x, y = bg_ico.size
 
-Label(fortune_window,
-      #width = 40,
-      text = cookie,
-      wraplength = 480,
-      justify = 'left',
-      font = ('', 15)).pack(side = LEFT, padx = 10, pady = 10),
+    for i in range(x):
+        for k in range(y):
+            color = bg_ico.getpixel((i, k))
+            color = color[:-1] + (225, )
+            bg_ico.putpixel((i, k), color)
+
+    bg_ico = ImageTk.PhotoImage(bg_ico)
+    Label(fortune_window,
+          #width = 40,
+          text = cookie,
+          wraplength = 480,
+          justify = 'left',
+          image = bg_ico,
+          compound = CENTER,
+          font = ('', 15)
+          ).pack(side = LEFT, padx = 10, pady = 10)
+else:
+    Label(fortune_window,
+          #width = 40,
+          text = cookie,
+          wraplength = 480,
+          justify = 'left',
+          font = ('', 15)).pack(side = LEFT, padx = 10, pady = 10)
 
 # load icons
 setting_ico = PhotoImage(file = r'res/setting-icon.png').subsample(20, 20)
